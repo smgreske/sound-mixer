@@ -1,0 +1,21 @@
+{
+  "name": "sound-mixer",
+  "version": "1.0.0",
+  "description": "This is the HTML/CSS/Audio only. This is the starting point in the course project. You will add the 6 JS files.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smgreske/sound-mixer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/smgreske/sound-mixer/issues"
+  },
+  "homepage": "https://github.com/smgreske/sound-mixer#readme"
+}
