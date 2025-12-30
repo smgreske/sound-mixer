@@ -1,4 +1,4 @@
-import { DEFAULT_VOLUME, query } from "./utils.js";
+import { query } from "./utils.js";
 
 export class UI {
     
@@ -9,22 +9,24 @@ export class UI {
         this.masterVolumeDisplay = null;
         this.masterPlayButton = null;
         this.resetButton = null;
+        this.defaultPresetsContainer = null;
         this.modal = null;
-        this.customPresetsContainer = null;
         this.timerDisplay = null;
         this.timerSelect = null;
         this.themeToggle = null;
 
         this.soundCards = new Map()
+        this.defaultPresets = new Map()
     }
 
-    init(soundDataAll) {
+    init(soundDataAll, defaultPresetDataAll) {
         try {
             this.soundCardsContainer = document.getElementById('soundCardsContainer');
             this.masterVolumeInput = document.getElementById('masterVolumeInput');
             this.masterVolumeDisplay = document.getElementById('masterVolumeDisplay');
             this.masterPlayButton = document.getElementById('masterPlayButton');
             this.resetButton = document.getElementById('resetAll');
+            this.defaultPresetsContainer = document.getElementById('defaultPresetsContainer');
             // this.modal = document.getElementById('savePresetModal');
             // this.customPresetsContainer = document.getElementById('customPresets');
             // this.timerDisplay = document.getElementById('timerDisplay');
@@ -32,6 +34,7 @@ export class UI {
             // this.themeToggle = document.getElementById('themeToggle');
             
             this.initAllSoundCards(soundDataAll)
+            this.initAllDefaultPresetButtons(defaultPresetDataAll)
 
         } catch (error) {
             console.log('Unable to initialize UI.', error )
@@ -39,7 +42,9 @@ export class UI {
 
     }
 
-    // SOUND CARD CREATION AND RENDERING //////////////////////////////////////////////
+// ELEMENT CREATION AND INITIALIZATION //////////////////////////////////////////////
+
+    // sound cards
 
     initAllSoundCards(soundDataAll) {
         this.soundCardsContainer.innerHTML = ''
@@ -52,24 +57,24 @@ export class UI {
         this.soundCardsContainer.appendChild(cardEl)
     }
 
-    createSoundCard(sound) {
+    createSoundCard(soundData) {
         const card = document.createElement('div')
         card.className = 'sound-card bg-white/10 backdrop-blur-md rounded-2xl p-6 relative overflow-hidden transition-all duration-300'
-        card.dataset.sound = sound.id
+        card.dataset.sound = soundData.id
 
         card.innerHTML = `<div class="flex flex-col h-full">
         <!-- Sound Icon and Name -->
             <div class="flex items-center justify-between mb-4">
                 <div class="flex items-center space-x-3">
-                    <div class="sound-icon-wrapper w-12 h-12 rounded-full bg-gradient-to-br ${sound.color} flex items-center justify-center">
-                    <i class="fas ${sound.icon} text-white text-xl"></i>
+                    <div class="sound-icon-wrapper w-12 h-12 rounded-full bg-gradient-to-br ${soundData.color} flex items-center justify-center">
+                    <i class="fas ${soundData.icon} text-white text-xl"></i>
                 </div>
                     <div>
-                        <h3 class="font-semibold text-lg">${sound.name}</h3>
-                        <p class="text-xs opacity-70">${sound.description}</p>
+                        <h3 class="font-semibold text-lg">${soundData.name}</h3>
+                        <p class="text-xs opacity-70">${soundData.description}</p>
                     </div>
                 </div>
-                <button type="button" class="play-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 flex items-center justify-center" data-sound="${sound.id}">
+                <button type="button" class="play-btn w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-all duration-300 flex items-center justify-center" data-sound="${soundData.id}">
                     <i class="fas fa-play text-sm"></i>
                 </button>
             </div>
@@ -92,15 +97,42 @@ export class UI {
         return card
     }
 
-// event methods 
+    // default preset buttons
+
+    initAllDefaultPresetButtons(defaultPresetDataAll) {
+        this.defaultPresetsContainer.innerHTML = ''
+        defaultPresetDataAll.forEach( (defaultPresetData) => this.initDefaultPresetButton(defaultPresetData))
+    }
+
+    initDefaultPresetButton(defaultPresetData) {
+        const button = this.createPresetButton(defaultPresetData)
+        this.defaultPresets.set(defaultPresetData.id, button)
+        this.defaultPresetsContainer.appendChild(button)
+    }
+
+    createPresetButton(presetData) {
+        const button = document.createElement('button')
+        button.className = "preset-btn bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-300"
+        button.dataset.preset = presetData.id
+        button.innerHTML = `<i class="fas ${presetData.icon} mr-2"></i>${presetData.name}`
+        return button
+    }
+
+// EVENT METHODS /////////////////////////////////////////////////////////////////////////////////
 
     getSoundID = (e) => e.target.closest('.sound-card').dataset.sound
+
+    getPresetID = (e) => e.target.closest('.preset-btn').dataset.preset
     
     isPlayButton = (e) =>  e.target.closest('.play-btn')
 
+    isPresetButton = (e) =>  e.target.closest('.preset-btn')
+
     isVolumeInput = (e) => e.target.classList.contains('volume-input')
 
-    getVolumeFromInputEvent = (e) => parseInt(e.target.value)
+    getVolumeFromInputEvent = (e) => e.target.value
+
+// UPDATE UI /////////////////////////////////////////////////////////////////////////////////
    
 // update main UI
 
@@ -144,31 +176,32 @@ export class UI {
 // update volume ui
 
     updateVolumeUI(id, volume) {
-        this.updateVolumeDisplay(id, volume)
-        this.updateVolumeBarWidth(id, volume)
-        this.updateVolumeInput(id, volume)
+        this._updateVolumeDisplay(id, volume)
+        this._updateVolumeBarWidth(id, volume)
+        this._updateVolumeInput(id, volume)
     }
 
-    updateVolumeBarWidth(id, volume) {
+    _updateVolumeBarWidth(id, volume) {
         const volumeBar = query('.volume-bar-fill', this.soundCards.get(id))
         volumeBar.style.width = `${volume}%`
     }
 
-    updateVolumeDisplay(id, volume) {
+    _updateVolumeDisplay(id, volume) {
         const volumeValue = query('.volume-value', this.soundCards.get(id))
         volumeValue.textContent = volume
     }
 
-    updateVolumeInput(id, volume) {
+    _updateVolumeInput(id, volume) {
         const volumeInput = query('.volume-input', this.soundCards.get(id))
         volumeInput.value = volume
     }
 
 // reset ui
 
-    resetMainUI() {
-        this.masterVolumeInput.value = DEFAULT_VOLUME
-        this.updateMasterVolumeDisplay(DEFAULT_VOLUME)
+    resetMainUI(defaultVolume) {
+
+        this.masterVolumeInput.value = defaultVolume
+        this.updateMasterVolumeDisplay(defaultVolume)
         this.updateMasterPlayIcon('play')
     }
     

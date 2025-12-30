@@ -1,32 +1,29 @@
-import { DEFAULT_VOLUME } from "./utils.js"
-
-export class SoundManager {
+export class AudioManager {
 
     constructor() {
 
         this._audioElements = new Map()
-        this.masterVolume = 50
         this.isPlaying = false
     }
 
     // init
 
-    init(soundDataAll, directory) {
-        this.loadAllSounds(soundDataAll, directory)
+    init(soundDataAll, directory, volume) {
+        this.loadAllSounds(soundDataAll, directory, volume)
     }
     
-    loadAllSounds(soundDataAll, directory) {
+    loadAllSounds(soundDataAll, directory, volume) {
         soundDataAll.forEach((sound) => {
             const filePath = `${directory}/${sound.file}`
-            this.loadSound(sound.id, filePath)
+            this.loadSound(sound.id, filePath, volume)
         })
     }
 
-    loadSound(soundID, filePath) {
+    loadSound(soundID, filePath, volume) {
         try {
             const audio = new Audio()
             audio.src = filePath
-            audio.volume = DEFAULT_VOLUME * this.masterVolume / 10000
+            audio.volume = volume
             audio.loop = true
             audio.preload = 'metadata'
             this._audioElements.set(soundID, audio)
@@ -36,10 +33,6 @@ export class SoundManager {
         }
     }
     
-    setMasterVolume(volume) {
-        this.masterVolume = parseInt(volume)
-    }
-
     getAudioElement(cb, soundID) {
         const audio = this._audioElements.get(soundID)
 
@@ -112,8 +105,8 @@ export class SoundManager {
     }
 
     setVolume(soundID, volume) {
-        this.getAudioElement( async (audio) => {
-            audio.volume = (volume * this.masterVolume) / 10000         
+        this.getAudioElement( (audio) => {
+            audio.volume = volume        
         }, 
         soundID)      
     }

@@ -1,5 +1,3 @@
-export const DEFAULT_VOLUME = 50
-
 export const query = (queryString, baseElement) => {
     try {
         const baseElementNew = (baseElement)
