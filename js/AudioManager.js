@@ -2,24 +2,22 @@ export class AudioManager {
 
     constructor() {
 
+        this.audioElements = {}
+
         this._audioElements = new Map()
         this.isPlaying = false
     }
 
     // init
-
-    init(soundDataAll, directory, volume) {
-        this.loadAllSounds(soundDataAll, directory, volume)
-    }
     
-    loadAllSounds(soundDataAll, directory, volume) {
+    initAudio(soundDataAll, directory, volume) {
         soundDataAll.forEach((sound) => {
             const filePath = `${directory}/${sound.file}`
-            this.loadSound(sound.id, filePath, volume)
+            this._loadSound(sound.id, filePath, volume)
         })
     }
 
-    loadSound(soundID, filePath, volume) {
+    _loadSound(soundID, filePath, volume) {
         try {
             const audio = new Audio()
             audio.src = filePath
@@ -27,12 +25,15 @@ export class AudioManager {
             audio.loop = true
             audio.preload = 'metadata'
             this._audioElements.set(soundID, audio)
+            this[soundID] = audio
         } 
         catch (error) {
             console.log(`Failed to load sound ${soundID}`, error)
         }
     }
     
+    //
+
     getAudioElement(cb, soundID) {
         const audio = this._audioElements.get(soundID)
 
@@ -92,7 +93,6 @@ export class AudioManager {
             audio.currentTime = 0            
         }, 
         soundID)
-
     } 
 
     toggleSound(soundID) {

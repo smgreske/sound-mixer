@@ -12,18 +12,21 @@ export class AmbientMixer {
         this.P = new PresetsManager()
 
         this.isInitialized = false
-        // this.presetManager = null
-        // this.timer = null
     }
 
 // INITIALIZATION /////////////////////////////////////
 
-    init(soundDirectory) {
+    init() {
         try {
-            this.S.init(soundData, defaultPresets)
-            this.A.init(soundData, soundDirectory, this.S.getEffectiveDefaultVolume())
-            this.UI.init(soundData, defaultPresets)
-            this.P.init(defaultPresets)
+            this.S.initSoundState(soundData)
+            this.A.initAudio(soundData, 'audio', this.S.getEffectiveDefaultVolume())
+            this.P.initDefaultPresets(defaultPresets)
+            this.P.loadCustomPresets()
+
+            this.UI.cacheDomElements()
+            this.UI.initSoundCards(soundData)
+            this.UI.initDefaultPresets(defaultPresets)
+            this.UI.updateCustomPresets(this.P.getAllCustomPresets())
 
             this.setupEventListeners()
             this.isInitialized = true
@@ -36,10 +39,12 @@ export class AmbientMixer {
 // EVENT LISTENERS ///////////////////////////////////////////
 
     setupEventListeners() {
+
+    // SOUND CARDS ------------------------------------------------
         
         // play button clicked
 
-        this.UI.soundCardsContainer.addEventListener('click', (e) => {
+        this.UI.el.soundsContainer.addEventListener('click', (e) => {
             if (this.UI.isPlayButton(e)) {
                 const id = this.UI.getSoundID(e)
 
@@ -63,9 +68,26 @@ export class AmbientMixer {
              }
         })
 
+        // volume input changed
+
+        this.UI.el.soundsContainer.addEventListener('input', (e) => {
+            if (this.UI.isVolumeInput(e)) {
+                const id = this.UI.getSoundID(e)
+                const volume = e.target.value
+
+                if (this.S.isInactive(id)) {
+                    this.S.activate(id)
+                }
+
+                this.updateVolume(id, volume)
+            }
+        })
+
+    // MAIN UI ----------------------------------------------
+
         // master play button clicked
 
-        this.UI.masterPlayButton.addEventListener('click', () => {
+        this.UI.el.master.playButton.addEventListener('click', () => {
 
             this.S.forEachActive( (id) => {
                 if (this.S.isPaused(id) === this.S.isMasterPaused()) {
@@ -88,24 +110,13 @@ export class AmbientMixer {
                 : this.UI.updateMasterPlayIcon('pause');
         })
 
-        // volume input changed
-
-        this.UI.soundCardsContainer.addEventListener('input', (e) => {
-            if (this.UI.isVolumeInput(e)) {
-                const id = this.UI.getSoundID(e)
-                const volume = e.target.value
-
-                if (this.S.isInactive(id)) {
-                    this.S.activate(id)
-                }
-
-                this.updateVolume(id, volume)
-            }
+        this.UI.el.presets.saveButton.addEventListener('click', () => {
+            this.UI.showModal()
         })
 
         // master volume input changed
 
-        this.UI.masterVolumeInput.addEventListener('input', (e) => {
+        this.UI.el.master.volumeInput.addEventListener('input', (e) => {
             const volume = e.target.value
             
             this.S.forEach( (id) => {
@@ -117,13 +128,15 @@ export class AmbientMixer {
         
         // reset button clicked
 
-        this.UI.resetButton.addEventListener('click', () => {   
+        this.UI.el.master.resetButton.addEventListener('click', () => {   
            this.resetAll()
         })
 
+    // PRESETS UI --------------------------------------------------------
+
         // custom preset clicked
 
-        this.UI.defaultPresetsContainer.addEventListener('click', (e) => {
+        this.UI.el.presets.defaultContainer.addEventListener('click', (e) => {
             if (this.UI.isPresetButton(e)) {
                 this.resetAll()
 
@@ -148,6 +161,49 @@ export class AmbientMixer {
                 }
             }
         })
+
+        // save preset button clicked
+
+        this.UI.el.presets.saveButton.addEventListener('click', (e) => {
+            this.UI.showModal()
+
+        })
+
+    // MODAL -----------------------------------------------------
+
+        // confirm save button clicked
+
+        this.UI.el.modal.confirmSaveButton.addEventListener('click', (e) => {
+            e.preventDefault()
+            const soundState = this.S.getSoundState()
+            const name = this.UI.getNameInputValue()
+            const isValid = this.validateInput(name)
+
+            if (isValid) {
+                this.P.savePreset(name, soundState)
+                this.UI.createCustomPresetButton(name, )
+                this.UI.clearNameInputValue()
+                this.UI.updateCustomPresets(this.P.getAllCustomPresets())
+                this.UI.hideModal()
+            }
+            
+        })
+
+        // cancel save button clicked
+
+        this.UI.el.modal.cancelSaveButton.addEventListener('click', () => {
+            this.UI.clearNameInputValue()
+            this.UI.hideModal()
+        })
+
+        // clicked outside of the modal
+
+        this.UI.el.modal.main.addEventListener('click', (e) => {
+            if (this.UI.wasModalBackgroundClicked(e)) {
+                this.UI.hideModal()
+            }
+        })
+
     }
 
     resetSound(id) {                 
@@ -175,5 +231,17 @@ export class AmbientMixer {
     updateMasterVolume(volume) {
         this.S.setMasterVolume(volume)
         this.UI.updateMasterVolumeDisplay(volume)
+    }
+
+    validateInput(name) {
+        if (name === '') {
+            alert('Please enter a name for this custom preset')
+            return false
+        }
+        if (this.P.isNameAlreadyUsed(name)) {
+            alert(`The name ${name} is already in use`)
+            return false
+        }
+        return true
     }
 }

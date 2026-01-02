@@ -1,60 +1,75 @@
-import { query } from "./utils.js";
+import { query, getById } from "./utils.js";
 
 export class UI {
     
     constructor() {
 
-        this.soundCardsContainer = null;
-        this.mastervolumeInput = null;
-        this.masterVolumeDisplay = null;
-        this.masterPlayButton = null;
-        this.resetButton = null;
-        this.defaultPresetsContainer = null;
-        this.modal = null;
-        this.timerDisplay = null;
-        this.timerSelect = null;
-        this.themeToggle = null;
+        this.el = {
+            master: {
+                volumeInput: null,
+                volumeDisplay: null,
+                playButton: null,
+                resetButton: null
+            },
+
+            soundsContainer: null,
+
+            presets: {
+                defaultContainer: null,
+                customContainer: null,
+                saveButton: null
+            },
+
+            modal: {
+                main: null,
+                window: null,
+                nameInput: null,
+                confirmSaveButton: null,
+                cancelSaveButton: null
+            },           
+        }
 
         this.soundCards = new Map()
         this.defaultPresets = new Map()
+        this.customPresets = new Map()
     }
 
-    init(soundDataAll, defaultPresetDataAll) {
-        try {
-            this.soundCardsContainer = document.getElementById('soundCardsContainer');
-            this.masterVolumeInput = document.getElementById('masterVolumeInput');
-            this.masterVolumeDisplay = document.getElementById('masterVolumeDisplay');
-            this.masterPlayButton = document.getElementById('masterPlayButton');
-            this.resetButton = document.getElementById('resetAll');
-            this.defaultPresetsContainer = document.getElementById('defaultPresetsContainer');
-            // this.modal = document.getElementById('savePresetModal');
-            // this.customPresetsContainer = document.getElementById('customPresets');
-            // this.timerDisplay = document.getElementById('timerDisplay');
-            // this.timerSelect = document.getElementById('timerSelect');
-            // this.themeToggle = document.getElementById('themeToggle');
+ 
             
-            this.initAllSoundCards(soundDataAll)
-            this.initAllDefaultPresetButtons(defaultPresetDataAll)
+  
 
-        } catch (error) {
-            console.log('Unable to initialize UI.', error )
-        }
+    cacheDomElements() {
+        this.el.master.volumeInput = getById('masterVolumeInput')
+        this.el.master.volumeDisplay = getById('masterVolumeDisplay');
+        this.el.master.playButton = getById('masterPlayButton');
+        this.el.master.resetButton = getById('resetAll');
 
+        this.el.soundsContainer = getById('soundCardsContainer');
+
+        this.el.presets.defaultContainer = getById('defaultPresets');
+        this.el.presets.customContainer = getById('customPresets');
+        this.el.presets.saveButton = getById('savePreset')
+
+        this.el.modal.main = getById('savePresetModal');
+        this.el.modal.window = getById('saveModalWindow')
+        this.el.modal.nameInput = getById('presetName');
+        this.el.modal.confirmSaveButton = getById('confirmSave')
+        this.el.modal.cancelSaveButton = getById('cancelSave')
     }
 
 // ELEMENT CREATION AND INITIALIZATION //////////////////////////////////////////////
 
     // sound cards
 
-    initAllSoundCards(soundDataAll) {
-        this.soundCardsContainer.innerHTML = ''
+    initSoundCards(soundDataAll) {
+        this.el.soundsContainer.innerHTML = ''
         soundDataAll.forEach( (soundData) => this.initSoundCard(soundData))
     }
 
     initSoundCard(soundData) {
         const cardEl = this.createSoundCard(soundData)
         this.soundCards.set(soundData.id, cardEl)
-        this.soundCardsContainer.appendChild(cardEl)
+        this.el.soundsContainer.appendChild(cardEl)
     }
 
     createSoundCard(soundData) {
@@ -97,20 +112,44 @@ export class UI {
         return card
     }
 
+    // custom preset buttons
+
+    updateCustomPresets(customPresets) {
+        this.el.presets.customContainer.innerHTML = ''
+        
+        customPresets.forEach( (customPreset) => {
+            const button = this.createCustomPresetButton(customPreset)
+            this.customPresets.set(customPreset.id, button)
+            this.el.presets.customContainer.appendChild(button)
+        })
+    }
+
+    createCustomPresetButton(customPreset) {
+        const button = document.createElement('button')
+        button.className = 'custom-preset-btn bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-300 relative group';
+        button.dataset.preset = customPreset.id;
+        button.innerHTML = `  <i class="fas fa-star mr-2 text-yellow-400"></i>${customPreset.name}
+            <button type="button" class="delete-preset absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-preset="${customPreset.id}">
+                <i class="fas fa-times text-xs text-white"></i>
+            </button>`;
+
+        return button
+    }
+
     // default preset buttons
 
-    initAllDefaultPresetButtons(defaultPresetDataAll) {
-        this.defaultPresetsContainer.innerHTML = ''
-        defaultPresetDataAll.forEach( (defaultPresetData) => this.initDefaultPresetButton(defaultPresetData))
+    initDefaultPresets(defaultPresetDataAll) {
+        this.el.presets.defaultContainer.innerHTML = ''
+        defaultPresetDataAll.forEach( (defaultPresetData) => this.initDefaultPreset(defaultPresetData))
     }
 
-    initDefaultPresetButton(defaultPresetData) {
-        const button = this.createPresetButton(defaultPresetData)
+    initDefaultPreset(defaultPresetData) {
+        const button = this.createDefaultPresetButton(defaultPresetData)
         this.defaultPresets.set(defaultPresetData.id, button)
-        this.defaultPresetsContainer.appendChild(button)
+        this.el.presets.defaultContainer.appendChild(button)
     }
 
-    createPresetButton(presetData) {
+    createDefaultPresetButton(presetData) {
         const button = document.createElement('button')
         button.className = "preset-btn bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-300"
         button.dataset.preset = presetData.id
@@ -130,18 +169,22 @@ export class UI {
 
     isVolumeInput = (e) => e.target.classList.contains('volume-input')
 
+    wasModalBackgroundClicked = (e) => !e.target.closest('#saveModalWindow')
+
     getVolumeFromInputEvent = (e) => e.target.value
+
+   
 
 // UPDATE UI /////////////////////////////////////////////////////////////////////////////////
    
 // update main UI
 
     updateMasterVolumeDisplay(volume) {
-        this.masterVolumeDisplay.textContent = volume
+        this.el.master.volumeDisplay.textContent = volume
     }
     
     updateMasterPlayIcon(type) {
-        const icon = query('i', this.masterPlayButton)
+        const icon = query('i', this.el.master.playButton)
         this._setIcon(icon, type)
     }
 
@@ -200,7 +243,7 @@ export class UI {
 
     resetMainUI(defaultVolume) {
 
-        this.masterVolumeInput.value = defaultVolume
+        this.el.master.volumeInput.value = defaultVolume
         this.updateMasterVolumeDisplay(defaultVolume)
         this.updateMasterPlayIcon('play')
     }
@@ -209,4 +252,29 @@ export class UI {
         this.updateSoundPlayIcon(id, 'play')
         this.updateVolumeUI(id, 0)  
     } 
+
+// modal
+
+    getNameInputValue = () => this.el.modal.nameInput.value
+
+    clearNameInputValue() {
+        this.el.modal.nameInput.value = ''
+    }
+
+    showModal() {
+        this.el.modal.main.classList.remove('hidden')
+        this.el.modal.main.classList.add('flex')
+        this.el.modal.nameInput.focus()
+    }
+
+    hideModal() {
+        this.el.modal.main.classList.add('hidden')
+        this.el.modal.main.classList.remove('flex')
+    }
+
+    toggleModal() {
+        this.el.modal.main.classlist.contains('hidden')
+        ? this.showModal()
+        : this.hideModal()
+    }
 }

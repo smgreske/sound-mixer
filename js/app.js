@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const app = new AmbientMixer()
 
-    app.init('audio')
+    app.init()
 
     window.app = app
 })

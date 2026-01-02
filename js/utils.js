@@ -19,3 +19,15 @@ export const query = (queryString, baseElement) => {
     }
 }
 
+export const getById = (queryString) => {
+    try {
+        const element = document.getElementById(queryString)
+        if (!element) throw new Error(`Could not find element with the id: '${queryString}'`)
+
+        return element
+        
+    } catch (error) {
+        console.log(error)
+    }
+}
+

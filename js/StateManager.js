@@ -65,7 +65,20 @@ export class StateManager {
 
     togglePaused  = (id) => this.state[id].isPaused = !this.state[id].isPaused
     
-// callback functions
+// other
+
+    getSoundState() {
+        const soundState = {}
+
+        this.keys.forEach( (sound) => {
+            const volume = this.state[sound].volume
+
+            if ((volume > 0) && (this.isActive(sound))) {
+                soundState[sound] = volume
+            }
+        })
+        return soundState
+    }
 
     forEach = (cb) => {
         this.keys.forEach( (key) => {
