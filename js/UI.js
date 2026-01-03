@@ -126,7 +126,7 @@ export class UI {
 
     createCustomPresetButton(customPreset) {
         const button = document.createElement('button')
-        button.className = 'custom-preset-btn bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-300 relative group';
+        button.className = 'preset-btn bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-300 relative group';
         button.dataset.preset = customPreset.id;
         button.innerHTML = `  <i class="fas fa-star mr-2 text-yellow-400"></i>${customPreset.name}
             <button type="button" class="delete-preset absolute -top-2 -right-2 w-6 h-6 bg-red-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" data-preset="${customPreset.id}">
@@ -135,6 +135,11 @@ export class UI {
 
         return button
     }
+
+    deleteCustomPreset = (d) => {
+        this.customPresets.get(d).remove()
+        this.customPresets.delete(d)
+    } 
 
     // default preset buttons
 
@@ -159,13 +164,15 @@ export class UI {
 
 // EVENT METHODS /////////////////////////////////////////////////////////////////////////////////
 
-    getSoundID = (e) => e.target.closest('.sound-card').dataset.sound
+    getSoundId = (e) => e.target.closest('.sound-card').dataset.sound
 
-    getPresetID = (e) => e.target.closest('.preset-btn').dataset.preset
+    getPresetId = (e) => e.target.closest('.preset-btn').dataset.preset
     
     isPlayButton = (e) =>  e.target.closest('.play-btn')
 
     isPresetButton = (e) =>  e.target.closest('.preset-btn')
+
+    isDeleteButton = (e) => e.target.closest('.delete-preset')
 
     isVolumeInput = (e) => e.target.classList.contains('volume-input')
 

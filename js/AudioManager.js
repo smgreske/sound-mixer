@@ -2,9 +2,7 @@ export class AudioManager {
 
     constructor() {
 
-        this.audioElements = {}
-
-        this._audioElements = new Map()
+        this._audioElements = {}
         this.isPlaying = false
     }
 
@@ -24,8 +22,7 @@ export class AudioManager {
             audio.volume = volume
             audio.loop = true
             audio.preload = 'metadata'
-            this._audioElements.set(soundID, audio)
-            this[soundID] = audio
+            this._audioElements[soundID] = audio
         } 
         catch (error) {
             console.log(`Failed to load sound ${soundID}`, error)
@@ -35,7 +32,7 @@ export class AudioManager {
     //
 
     getAudioElement(cb, soundID) {
-        const audio = this._audioElements.get(soundID)
+        const audio = this._audioElements[soundID]
 
         try {
             if (!audio) throw new Error(`Sound ${soundID} not found`)
@@ -59,7 +56,7 @@ export class AudioManager {
     }
 
     async playAll() {
-        this._audioElements.forEach( async (audio) => {
+        this._audioElements.values().forEach( async (audio) => {
             if (audio.paused) {
                 await audio.play()
             }

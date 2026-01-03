@@ -1,50 +1,50 @@
-import { defaultPresets } from "./soundData.js"
-
 export class PresetsManager {
     constructor() {
-        this.defaultPresets = defaultPresets
-        this.customPresets = []
+        this.defaultPresets = null
+        this.customPresets = null
     }
 
-    init() {
-        this.initDefaultPresets()
+    init(defaultPresets) {
+        this.loadDefaultPresets(defaultPresets)
         this.loadCustomPresets()
     }
 
-    initDefaultPresets(defaultPresetsDataAll) {
-        defaultPresetsDataAll.forEach( (defaultPresetData) => {
-            this.defaultPresets[defaultPresetData.id] = defaultPresetData.sounds
-        })
+    loadDefaultPresets = (defaultPresets) => 
+        this.defaultPresets = (defaultPresets) ? defaultPresets : []
+
+    loadCustomPresets = () =>  {
+        const customPresets = JSON.parse( localStorage.getItem('ambientMixerPresets') )
+        this.customPresets = (customPresets) ? customPresets : []
     }
 
-    loadCustomPresets() {
-        const customPresets = localStorage.getItem('ambientMixerPresets');
-        this.customPresets = (customPresets)
-            ? JSON.parse(customPresets)
-            : []
-    }
+    getAllCustomPresets = () => this.customPresets
 
-    getAllCustomPresets = () => [...this.customPresets] 
 
-    
-    getDefaultPresetData = (id) => this.defaultPresets[id] 
+    getDefaultPresetById = (id) => this.defaultPresets.find( (preset) => preset.id === id)
+
+    getCustomPresetById =  (id) => this.customPresets.find( (preset) => preset.id === id)
+
     
     savePreset = (name, soundState) => {
         const id = this.generatePresetId()
         this.customPresets.push( {id:id, name, soundState})
-        this.storeCustomPresets()
+        this.saveToLocal()
     } 
 
-    storeCustomPresets() {
+    saveToLocal = () => 
         localStorage.setItem('ambientMixerPresets', JSON.stringify(this.customPresets))
-    }
+    
 
     generatePresetId = () => {
         return `custom-${Date.now()}`
     }
 
-    isNameAlreadyUsed = (name) => {
-        const presetIDs = Object.keys(this.customPresets)
-        return presetIDs.some( (id) => this.customPresets[id].name === name )
+    nameAlreadyExists = (name) => this.customPresets.some( (customPreset) => customPreset.name === name)
+
+         
+
+    deletePreset = (id) => {
+        this.customPresets = this.customPresets.filter( (element) => element[id] === id)
+        this.saveToLocal()
     }
 }

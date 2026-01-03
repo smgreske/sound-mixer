@@ -20,8 +20,7 @@ export class AmbientMixer {
         try {
             this.S.initSoundState(soundData)
             this.A.initAudio(soundData, 'audio', this.S.getEffectiveDefaultVolume())
-            this.P.initDefaultPresets(defaultPresets)
-            this.P.loadCustomPresets()
+            this.P.init(defaultPresets)
 
             this.UI.cacheDomElements()
             this.UI.initSoundCards(soundData)
@@ -46,7 +45,7 @@ export class AmbientMixer {
 
         this.UI.el.soundsContainer.addEventListener('click', (e) => {
             if (this.UI.isPlayButton(e)) {
-                const id = this.UI.getSoundID(e)
+                const id = this.UI.getSoundId(e)
 
                 if (this.S.isInactive(id)) {
                     this.S.activate(id)
@@ -72,7 +71,7 @@ export class AmbientMixer {
 
         this.UI.el.soundsContainer.addEventListener('input', (e) => {
             if (this.UI.isVolumeInput(e)) {
-                const id = this.UI.getSoundID(e)
+                const id = this.UI.getSoundId(e)
                 const volume = e.target.value
 
                 if (this.S.isInactive(id)) {
@@ -140,24 +139,32 @@ export class AmbientMixer {
             if (this.UI.isPresetButton(e)) {
                 this.resetAll()
 
-                const presetID = this.UI.getPresetID(e)
-                const presetData = this.P.getDefaultPresetData(presetID)
+                const presetId = this.UI.getPresetId(e)
+                const presetData = this.P.getDefaultPresetById(presetId)
+                console.log(presetData)
+                this.updateAllSounds(presetData.sounds)
+            }
+        })
 
-                for (const id in presetData) {
-                    const volume = presetData[id]
+        // Preset Button
 
-                    this.updateVolume(id, volume)
+        this.UI.el.presets.customContainer.addEventListener('click', (e) => {
 
-                    this.S.activate(id)
-                    this.S.unpause(id)
-                    this.S.unpauseMaster()
+            // preset button clicked
+            if (this.UI.isPresetButton(e)) {
+                const presetId = this.UI.getPresetId(e)
+                
+                // delete icon clicked
+                if (this.UI.isDeleteButton(e)) {
+                    this.P.deletePreset(presetId)
+                    this.UI.deleteCustomPreset(presetId)
+                    
+                }
+                else {
 
-                    this.A.playSound(id)
-
-                    this.UI.updateSoundPlayIcon(id, 'pause')
-                    this.UI.updateMasterPlayIcon('pause')
-
-
+                    this.resetAll()     
+                    const presetData = this.P.getCustomPresetById(presetId)
+                    this.updateAllSounds(presetData.soundState)
                 }
             }
         })
@@ -204,6 +211,8 @@ export class AmbientMixer {
             }
         })
 
+        
+
     }
 
     resetSound(id) {                 
@@ -238,10 +247,29 @@ export class AmbientMixer {
             alert('Please enter a name for this custom preset')
             return false
         }
-        if (this.P.isNameAlreadyUsed(name)) {
+        if (this.P.nameAlreadyExists(name)) {
             alert(`The name ${name} is already in use`)
             return false
         }
         return true
+    }
+
+    updateAllSounds(soundState) {
+
+        for (const soundId in soundState) {
+            const volume = soundState[soundId]
+            console.log(volume)
+
+            this.updateVolume(soundId, volume)
+
+            this.S.activate(soundId)
+            this.S.unpause(soundId)
+            this.S.unpauseMaster()
+
+            this.A.playSound(soundId)
+
+            this.UI.updateSoundPlayIcon(soundId, 'pause')
+            this.UI.updateMasterPlayIcon('pause')
+        }
     }
 }

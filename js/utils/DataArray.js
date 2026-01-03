@@ -1,7 +1,7 @@
 export class DataArray {
 
     constructor(idName = 'id') {
-        this._data = []
+        this._data = null
         this.idName = idName
     }
 
